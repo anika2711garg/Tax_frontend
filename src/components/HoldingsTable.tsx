@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTax } from "../context/TaxContext";
 import type { Holding } from "../services/api";
-import { Search, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Check, Sparkles, Download } from "lucide-react";
 
 type SortField = "coin" | "totalCurrentValue" | "stcg" | "ltcg" | "currentPrice";
 type SortOrder = "asc" | "desc";
@@ -13,7 +13,10 @@ export const HoldingsTable: React.FC = () => {
     toggleCoin,
     toggleAllCoins,
     dataset,
-    isLoading
+    isLoading,
+    harvestPercentages,
+    setHarvestPercentage,
+    autoSelectOptimal
   } = useTax();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,6 +27,10 @@ export const HoldingsTable: React.FC = () => {
   // Unique key helper to identify assets safely
   const getUniqueId = (holding: Holding) => `${holding.coin}_${holding.coinName}`;
 
+  // Check if a row is selected
+  const isSelected = (holding: Holding) => {
+    return selectedCoins.has(getUniqueId(holding));
+  };
 
   // Select all handler
   const allSelected = useMemo(() => {
@@ -33,6 +40,37 @@ export const HoldingsTable: React.FC = () => {
 
   const handleSelectAll = () => {
     toggleAllCoins(!allSelected);
+  };
+
+  // Export harvesting plan to CSV
+  const handleExportCSV = () => {
+    const selectedHoldings = holdings.filter(h => isSelected(h));
+    if (selectedHoldings.length === 0) {
+      alert("Please select at least one holding to export a tax harvesting plan!");
+      return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Asset Symbol,Asset Name,Current Price,Total Balance,Harvest Percentage,Amount to Sell,Short-Term Gain (Harvested),Long-Term Gain (Harvested)\n";
+
+    selectedHoldings.forEach(h => {
+      const uid = getUniqueId(h);
+      const percent = harvestPercentages[uid] ?? 100;
+      const factor = percent / 100;
+      const amtToSell = h.totalHolding * factor;
+      const stcgHarvested = h.stcg.gain * factor;
+      const ltcgHarvested = h.ltcg.gain * factor;
+
+      csvContent += `"${h.coin}","${h.coinName}",${h.currentPrice},${h.totalHolding},${percent}%,${amtToSell},${stcgHarvested},${ltcgHarvested}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `koinx_tax_loss_harvesting_plan_${dataset}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Get total current value for sorting purposes
@@ -121,10 +159,11 @@ export const HoldingsTable: React.FC = () => {
   const visibleHoldings = isExpanded ? processedHoldings : processedHoldings.slice(0, 6);
 
   // Replicate display overrides for screenshot mode to perfectly match the SS
-  const renderCellData = (holding: Holding, column: string) => {
+  const renderCellData = (holding: Holding, column: string, percent = 100) => {
     const isScreenshotMode = dataset === "screenshot";
     const coinKey = holding.coin;
     const isMainCoin = ["BTC", "ETH", "USDT", "MATIC"].includes(coinKey) && holding.coinName !== "Arbitrum Bridged USDT (Arbitrum)" && holding.coinName !== "Bridged USDC (Polygon PoS Bridge)";
+    const factor = percent / 100;
 
     if (isScreenshotMode && isMainCoin) {
       if (column === "holdings_subtext") {
@@ -138,6 +177,10 @@ export const HoldingsTable: React.FC = () => {
         if (coinKey === "ETH") return "5.6736 ETH";
         if (coinKey === "USDT") return "3096.54 USDT";
         if (coinKey === "MATIC") return "2210 MATIC";
+      }
+      if (column === "amount_to_sell_val") {
+        const baseAmt = coinKey === "BTC" ? 0.63776 : coinKey === "ETH" ? 5.6736 : coinKey === "USDT" ? 3096.54 : 2210;
+        return `${(baseAmt * factor).toLocaleString("en-US", { maximumFractionDigits: 5 })} ${coinKey}`;
       }
       if (column === "total_value") {
         if (coinKey === "BTC") return "$ 55,320.15";
@@ -163,6 +206,8 @@ export const HoldingsTable: React.FC = () => {
     switch (column) {
       case "holdings_val":
         return `${holding.totalHolding.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${holding.coin}`;
+      case "amount_to_sell_val":
+        return `${(holding.totalHolding * factor).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${holding.coin}`;
       case "holdings_subtext":
         return `$ ${holding.currentPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}/${holding.coin}`;
       case "total_value":
@@ -207,16 +252,38 @@ export const HoldingsTable: React.FC = () => {
       <div className="holdings-header-row">
         <h3 className="holdings-title">Holdings</h3>
 
-        {/* Search Bar */}
-        <div className="search-bar-container">
-          <Search size={16} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search assets (e.g. BTC, Ethereum)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+        <div className="holdings-controls">
+          {/* Export Plan Button */}
+          <button
+            onClick={handleExportCSV}
+            className="action-btn export-btn"
+            title="Download harvesting trade details as CSV"
+          >
+            <Download size={14} />
+            <span>Export Plan</span>
+          </button>
+
+          {/* Auto Optimize Selector Button */}
+          <button
+            onClick={autoSelectOptimal}
+            className="action-btn optimize-btn"
+            title="Auto-select all assets with tax-saving losses"
+          >
+            <Sparkles size={14} className="sparkle-active" />
+            <span>Auto-Optimize</span>
+          </button>
+
+          {/* Search Bar */}
+          <div className="search-bar-container">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search assets (e.g. BTC, ETH)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
         </div>
       </div>
 
@@ -289,9 +356,14 @@ export const HoldingsTable: React.FC = () => {
             {visibleHoldings.map((holding) => {
               const uid = getUniqueId(holding);
               const checked = selectedCoins.has(uid);
+              const percent = harvestPercentages[uid] ?? 100;
               const stcgDetails = renderCellData(holding, "stcg") as { val: string; sub: string; sign: number };
               const ltcgDetails = renderCellData(holding, "ltcg") as { val: string; sub: string; sign: number };
               const holdingsVal = renderCellData(holding, "holdings_val") as string;
+              const sellAmountVal = renderCellData(holding, "amount_to_sell_val", percent) as string;
+
+              // Identify if a coin is an optimal tax harvesting candidate (has realized losses!)
+              const isOptimalCandidate = holding.stcg.gain < 0 || holding.ltcg.gain < 0;
 
               return (
                 <tr key={uid} className={`table-row ${checked ? "row-selected" : ""}`}>
@@ -321,13 +393,19 @@ export const HoldingsTable: React.FC = () => {
                         alt={`${holding.coin} Logo`}
                         className="asset-logo"
                         onError={(e) => {
-                          // Fallback to default circle if gecko fails
                           (e.target as HTMLImageElement).src =
                             "https://koinx-statics.s3.ap-south-1.amazonaws.com/currencies/DefaultCoin.svg";
                         }}
                       />
                       <div className="asset-info">
-                        <span className="asset-name">{holding.coinName}</span>
+                        <div className="asset-name-row">
+                          <span className="asset-name">{holding.coinName}</span>
+                          {isOptimalCandidate && (
+                            <span className="harvest-badge animate-pulse" title="This asset has losses you can harvest to save tax!">
+                              💡 Harvest
+                            </span>
+                          )}
+                        </div>
                         <span className="asset-symbol">{holding.coin}</span>
                       </div>
                     </div>
@@ -366,12 +444,28 @@ export const HoldingsTable: React.FC = () => {
                     </div>
                   </td>
 
-                  {/* Amount to Sell Column */}
-                  <td className="col-amount-sell font-medium">
+                  {/* Amount to Sell Column with Proportional Pills */}
+                  <td className="col-amount-sell">
                     {checked ? (
-                      <span className="amount-sell-active animate-fade-in">
-                        {holdingsVal}
-                      </span>
+                      <div className="amount-sell-container animate-fade-in">
+                        <span className="amount-sell-active">
+                          {sellAmountVal}
+                        </span>
+                        
+                        {/* 4 Segmented Percentage Selector Pills */}
+                        <div className="sell-percentage-selector">
+                          {[25, 50, 75, 100].map((p) => (
+                            <button
+                              key={p}
+                              onClick={() => setHarvestPercentage(uid, p)}
+                              className={`percent-pill-btn ${percent === p ? "active" : ""}`}
+                              title={`Sell ${p}% of holding to harvest proportional gains/losses`}
+                            >
+                              {p}%
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ) : (
                       <span className="amount-sell-placeholder">-</span>
                     )}

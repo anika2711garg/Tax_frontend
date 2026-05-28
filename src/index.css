@@ -56,6 +56,8 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 20px 0 rgba(37, 99, 235, 0.15);
+
+  --chart-pre-bg: linear-gradient(90deg, #475569 0%, #1e293b 100%);
 }
 
 /* Light Theme Variables (Matches White Screenshot) */
@@ -99,6 +101,8 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
   --shadow-glow: 0 0 15px 0 rgba(37, 99, 235, 0.08);
+
+  --chart-pre-bg: linear-gradient(90deg, #94a3b8 0%, #cbd5e1 100%);
 }
 
 /* ==========================================================================
@@ -266,108 +270,387 @@ body {
   color: var(--text-primary);
 }
 
-.how-it-works-link {
+/* ========================================================================== 
+   5. Popover Disclosures
+   ========================================================================== */
+.disclosure-popover {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.disclosure-popover--banner {
+  display: block;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.disclosure-trigger {
+  font-family: var(--font-sans);
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.disclosure-trigger:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 2px;
+}
+
+.disclosure-trigger--link {
+  width: fit-content;
+  padding: 0;
+  background: transparent;
   font-size: 13px;
   font-weight: 500;
   color: var(--color-brand);
   text-decoration: underline;
-  cursor: pointer;
-  transition: color var(--transition-fast);
+  text-underline-offset: 2px;
 }
 
-.how-it-works-link:hover {
+.disclosure-trigger--link:hover {
   color: #3b82f6;
 }
 
-/* ==========================================================================
-   5. Collapsible Disclaimer Banner
-   ========================================================================== */
-.disclaimer-box {
-  background-color: var(--bg-disclaimer);
-  border: 1px solid var(--border-disclaimer);
-  border-radius: var(--border-radius-md);
-  margin-bottom: 32px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-medium);
-}
-
-.disclaimer-box.collapsed {
-  border-color: transparent;
-}
-
-.disclaimer-header {
+.disclosure-trigger--banner {
   width: 100%;
-  background: transparent;
-  border: none;
+  background: linear-gradient(180deg, rgba(16, 33, 77, 0.88) 0%, rgba(12, 26, 61, 0.98) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 12px;
+  padding: 13px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-  outline: none;
+  justify-content: space-between;
+  color: #dbeafe;
+  box-shadow: 0 8px 20px rgba(10, 15, 30, 0.18);
 }
 
-.disclaimer-header:hover {
-  background-color: rgba(37, 99, 235, 0.03);
+.disclosure-trigger--banner:hover {
+  background: linear-gradient(180deg, rgba(18, 37, 85, 0.95) 0%, rgba(12, 26, 61, 1) 100%);
+  border-color: rgba(96, 165, 250, 0.5);
 }
 
-.disclaimer-title {
-  display: flex;
+.disclosure-banner-label {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-disclaimer);
+  letter-spacing: 0.01em;
 }
 
-.info-icon {
+.disclosure-banner-icon,
+.disclosure-trigger-chevron {
+  color: #93c5fd;
   flex-shrink: 0;
 }
 
-.chevron-icon {
-  color: var(--text-disclaimer);
+.disclosure-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  z-index: 1200;
 }
 
-.disclaimer-content {
-  padding: 0 20px 20px 20px;
+.disclosure-popover-card {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 1201;
+  width: min(340px, calc(100vw - 32px));
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18), 0 6px 16px rgba(15, 23, 42, 0.08);
+  padding: 14px 16px 16px;
 }
 
-.disclaimer-list {
-  list-style-type: none;
-  padding-left: 0;
+.disclosure-popover--right .disclosure-popover-card {
+  left: auto;
+  right: 0;
+}
+
+.disclosure-popover--banner .disclosure-popover-card {
+  width: min(330px, calc(100vw - 32px));
+}
+
+.disclosure-popover-card::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 18px;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-left: 1px solid rgba(148, 163, 184, 0.32);
+  border-top: 1px solid rgba(148, 163, 184, 0.32);
+  transform: rotate(45deg);
+}
+
+.disclosure-popover--right .disclosure-popover-card::before {
+  left: auto;
+  right: 18px;
+}
+
+.disclosure-popover-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.disclosure-popover-close:hover {
+  background: rgba(148, 163, 184, 0.22);
+  color: #0f172a;
+}
+
+.disclosure-popover-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+  padding-right: 28px;
+}
+
+.disclosure-popover-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.disclaimer-list li {
+.disclosure-popover-list li {
   font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  position: relative;
-  padding-left: 18px;
+  line-height: 1.45;
+  color: #0f172a;
 }
 
-.disclaimer-list li::before {
-  content: "•";
-  position: absolute;
-  left: 5px;
-  top: 0;
-  font-size: 16px;
-  color: var(--text-disclaimer);
+.disclosure-popover-note {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 700;
+  color: #111827;
 }
 
 /* ==========================================================================
-   6. Capital Gains Dashboard (Pre vs After Cards)
+   6. Custom Extra Enhancements: Projection Control Panel
    ========================================================================== */
+.projection-controls-panel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-medium);
+}
+
+.projection-controls-panel:hover {
+  border-color: var(--border-color-active);
+}
+
+.controls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.controls-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.icon-slider {
+  color: var(--color-brand);
+}
+
+.savings-alert-ticker {
+  background-color: var(--color-loss-bg);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: var(--color-loss);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.theme-light .savings-alert-ticker {
+  background-color: rgba(220, 38, 38, 0.05);
+  border-color: rgba(220, 38, 38, 0.12);
+}
+
+.controls-body {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .controls-body {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.tax-rates-inputs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rate-input-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rate-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-suffix-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rate-number-input {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-input);
+  width: 70px;
+  padding: 8px 24px 8px 8px;
+  border-radius: 6px;
+  text-align: center;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.rate-number-input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Removes arrows in chrome/safari */
+.rate-number-input::-webkit-outer-spin-button,
+.rate-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.percent-suffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+}
+
+/* CSS-only Comparison Chart */
+.tax-comparison-chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chart-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.chart-bar-val {
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.pre-harvest-fill {
+  background: var(--chart-pre-bg);
+}
+
+.post-harvest-fill {
+  background: var(--color-brand-gradient);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+}
+
+.animate-width-transition {
+  transition: width var(--transition-slow);
+}
+
+/* ==========================================================================
+   7. Capital Gains Dashboard (Pre vs After Cards)
+   ========================================================================== */
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
 .gains-dashboard {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .gains-card {
@@ -560,7 +843,7 @@ body {
 }
 
 /* ==========================================================================
-   7. Holdings Table Section
+   8. Holdings Table Section
    ========================================================================== */
 .holdings-section {
   background-color: var(--bg-card);
@@ -587,10 +870,60 @@ body {
   color: var(--text-primary);
 }
 
+.holdings-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Action Control Buttons */
+.action-btn {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn:hover {
+  border-color: var(--color-brand);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.export-btn:hover {
+  color: var(--color-brand);
+}
+
+.optimize-btn:hover {
+  background-color: var(--bg-row-selected);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.sparkle-active {
+  color: #ca8a04;
+}
+
+.theme-dark .sparkle-active {
+  color: #facc15;
+}
+
 /* Glassmorphic Search Input */
 .search-bar-container {
   position: relative;
   width: 100%;
+  min-width: 220px;
   max-width: 320px;
 }
 
@@ -606,11 +939,11 @@ body {
 .search-input {
   width: 100%;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 13px;
   background-color: var(--bg-app);
   border: 1px solid var(--border-color);
   color: var(--text-input);
-  padding: 10px 16px 10px 42px;
+  padding: 8px 16px 8px 38px;
   border-radius: var(--border-radius-sm);
   outline: none;
   transition: all var(--transition-fast);
@@ -620,7 +953,6 @@ body {
 .search-input:focus {
   border-color: var(--color-brand);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  transform: translateY(-1px);
 }
 
 /* Table Architecture styling */
@@ -753,7 +1085,7 @@ body {
   border-bottom-color: var(--border-row-selected);
 }
 
-/* Asset Column layout */
+/* Asset Column layout & Harvest Badge */
 .asset-cell {
   display: flex;
   align-items: center;
@@ -775,11 +1107,37 @@ body {
   flex-direction: column;
 }
 
+.asset-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .asset-name {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 14px;
   color: var(--text-primary);
+}
+
+.harvest-badge {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 800;
+  color: #b45309; /* Deep gold */
+  background-color: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  margin-left: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.theme-dark .harvest-badge {
+  color: #facc15;
+  background-color: rgba(250, 204, 21, 0.12);
+  border-color: rgba(250, 204, 21, 0.2);
 }
 
 .asset-symbol {
@@ -827,18 +1185,25 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Amount to Sell */
+/* Amount to Sell & Percentage Pills */
 .col-amount-sell {
   font-variant-numeric: tabular-nums;
+}
+
+.amount-sell-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
 }
 
 .amount-sell-active {
   background-color: var(--color-loss-bg);
   color: var(--color-loss);
   border: 1px solid rgba(239, 68, 68, 0.15);
-  padding: 6px 12px;
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   display: inline-block;
   box-shadow: var(--shadow-sm);
@@ -848,6 +1213,38 @@ body {
   background-color: rgba(220, 38, 38, 0.05);
   color: var(--color-loss);
   border-color: rgba(220, 38, 38, 0.12);
+}
+
+.sell-percentage-selector {
+  display: flex;
+  gap: 3px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.percent-pill-btn {
+  font-family: var(--font-sans);
+  background: transparent;
+  border: none;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.percent-pill-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-row-selected);
+}
+
+.percent-pill-btn.active {
+  background-color: var(--color-brand);
+  color: #ffffff;
 }
 
 .amount-sell-placeholder {
@@ -918,13 +1315,13 @@ body {
 }
 
 /* ==========================================================================
-   8. App Footer Branding
+   9. App Footer Branding
    ========================================================================== */
 .app-footer {
   text-align: center;
   padding: 48px 24px 32px 24px;
   border-top: 1px solid var(--border-color);
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.02);
   transition: border-color var(--transition-medium);
 }
 
@@ -934,7 +1331,7 @@ body {
 }
 
 /* ==========================================================================
-   9. CSS Micro-Animations & Keyframes
+   10. CSS Micro-Animations & Keyframes
    ========================================================================== */
 @keyframes spin {
   from { transform: rotate(0deg); }
@@ -944,7 +1341,7 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -1011,7 +1408,7 @@ body {
 }
 
 /* ==========================================================================
-   10. Responsiveness Adapters (Mobile & Tablets)
+   11. Responsiveness Adapters (Mobile & Tablets)
    ========================================================================== */
 @media (max-width: 968px) {
   .gains-dashboard {
@@ -1029,6 +1426,30 @@ body {
 
   .page-title {
     font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .holdings-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .holdings-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .search-bar-container {
+    max-width: 100%;
+    width: 100%;
+    order: 3;
+  }
+  
+  .action-btn {
+    flex-grow: 1;
+    justify-content: center;
   }
 }
 
@@ -1059,20 +1480,25 @@ body {
     height: 32px;
   }
 
-  .disclaimer-header {
+  .disclosure-trigger--banner {
     padding: 12px 14px;
   }
 
-  .disclaimer-title {
+  .disclosure-banner-label {
     font-size: 13px;
   }
 
-  .disclaimer-content {
-    padding: 0 14px 14px 14px;
+  .disclosure-popover-card {
+    width: min(100%, calc(100vw - 24px));
+    padding: 13px 14px 14px;
   }
 
-  .disclaimer-list li {
+  .disclosure-popover-list li {
     font-size: 12px;
+  }
+
+  .disclosure-popover-note {
+    font-size: 11.5px;
   }
 
   .gains-card {
@@ -1086,16 +1512,6 @@ body {
   .gains-table-header, .gains-row {
     font-size: 12.5px;
     grid-template-columns: 1fr 1fr 1fr;
-  }
-
-  .holdings-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .search-bar-container {
-    max-width: 100%;
   }
 
   .holdings-section {
