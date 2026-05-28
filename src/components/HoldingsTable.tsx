@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTax } from "../context/TaxContext";
 import type { Holding } from "../services/api";
-import { Search, ChevronUp, ChevronDown, Check, Sparkles, Download } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Check, Sparkles, Download, RotateCcw, Copy } from "lucide-react";
 
 type SortField = "coin" | "totalCurrentValue" | "stcg" | "ltcg" | "currentPrice";
 type SortOrder = "asc" | "desc";
@@ -14,6 +14,7 @@ export const HoldingsTable: React.FC = () => {
     toggleAllCoins,
     dataset,
     isLoading,
+    taxSavings,
     harvestPercentages,
     setHarvestPercentage,
     autoSelectOptimal
@@ -23,6 +24,7 @@ export const HoldingsTable: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>("coin");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
 
   // Unique key helper to identify assets safely
   const getUniqueId = (holding: Holding) => `${holding.coin}_${holding.coinName}`;
@@ -71,6 +73,29 @@ export const HoldingsTable: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleResetView = () => {
+    setSearchTerm("");
+    setSortField("coin");
+    setSortOrder("asc");
+    setIsExpanded(false);
+  };
+
+  const handleCopySummary = async () => {
+    const selectedHoldings = holdings.filter((holding) => isSelected(holding));
+    const summaryText = [
+      `Selected assets: ${selectedHoldings.length}`,
+      `Visible assets: ${visibleHoldings.length}`,
+      `Estimated tax savings: $${taxSavings.toLocaleString("en-US")}`
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(summaryText);
+      setCopyState("copied");
+    } catch {
+      alert(summaryText);
+    }
   };
 
   // Get total current value for sorting purposes
@@ -157,6 +182,15 @@ export const HoldingsTable: React.FC = () => {
 
   // Collapsible display count
   const visibleHoldings = isExpanded ? processedHoldings : processedHoldings.slice(0, 6);
+
+  useEffect(() => {
+    if (copyState !== "copied") {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => setCopyState("idle"), 1800);
+    return () => window.clearTimeout(timerId);
+  }, [copyState]);
 
   // Replicate display overrides for screenshot mode to perfectly match the SS
   const renderCellData = (holding: Holding, column: string, percent = 100) => {
@@ -253,6 +287,24 @@ export const HoldingsTable: React.FC = () => {
         <h3 className="holdings-title">Holdings</h3>
 
         <div className="holdings-controls">
+          <button
+            onClick={handleResetView}
+            className="action-btn reset-btn"
+            title="Reset search, sorting, and table expansion"
+          >
+            <RotateCcw size={14} />
+            <span>Reset View</span>
+          </button>
+
+          <button
+            onClick={handleCopySummary}
+            className="action-btn copy-btn"
+            title="Copy a quick selection summary"
+          >
+            <Copy size={14} />
+            <span>{copyState === "copied" ? "Copied" : "Copy Summary"}</span>
+          </button>
+
           {/* Export Plan Button */}
           <button
             onClick={handleExportCSV}

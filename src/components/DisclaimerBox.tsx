@@ -5,44 +5,38 @@ export const DisclaimerBox: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className={`disclaimer-box ${isOpen ? "open" : "collapsed"}`}>
-      <button onClick={() => setIsOpen(!isOpen)} className="disclaimer-header">
+    <section className={`disclaimer-panel ${isOpen ? "is-open" : "is-collapsed"}`}>
+      <button type="button" onClick={() => setIsOpen(!isOpen)} className="disclaimer-header">
         <div className="disclaimer-title">
-          <Info size={16} className="info-icon" />
-          <span>Important Notes & Disclaimers</span>
+          <span className="disclaimer-icon-wrap">
+            <Info size={14} className="info-icon" />
+          </span>
+          <span>Important Notes And Disclaimers</span>
         </div>
-        <div className="disclaimer-toggle">
-          {isOpen ? (
-            <ChevronUp size={16} className="chevron-icon" />
-          ) : (
-            <ChevronDown size={16} className="chevron-icon" />
-          )}
-        </div>
+        {isOpen ? <ChevronUp size={14} className="chevron-icon" /> : <ChevronDown size={14} className="chevron-icon" />}
       </button>
 
       {isOpen && (
         <div className="disclaimer-content animate-slide-down">
           <ul className="disclaimer-list">
             <li>
-              Tax-loss harvesting is currently not allowed under Indian tax regulations. Please consult your tax advisor
-              before making any decisions.
+              <strong>Price Source Disclaimer:</strong> Please note that the current price of your coins may differ from
+              the prices listed on specific exchanges. This is because we use CoinGecko as our default price source for
+              certain exchanges, rather than fetching prices directly from the exchange.
             </li>
             <li>
-              Tax harvesting does not apply to derivatives or futures. These are handled separately as business income
-              under tax rules.
+              <strong>Country-specific Availability:</strong> Tax loss harvesting may not be supported in all countries.
+              We strongly recommend consulting with your local tax advisor or accountant before performing any related
+              actions on your exchange.
             </li>
             <li>
-              Price and market value data is fetched from Coingecko, not from individual exchanges. As a result, values
-              may slightly differ from the ones on your exchange.
+              <strong>Utilization of Losses:</strong> Tax loss harvesting typically allows you to offset capital gains.
+              However, if you have zero or no applicable crypto capital gains, the usability of these harvested losses
+              may be limited. Kindly confirm with your tax advisor how such losses can be applied in your situation.
             </li>
-            <li>
-              Some countries do not have a short-term / long-term bifurcation. For now, we are calculating everything
-              as long-term.
-            </li>
-            <li>Only realized losses are considered for harvesting. Unrealized losses in held assets are not counted.</li>
           </ul>
         </div>
       )}
-    </div>
+    </section>
   );
 };

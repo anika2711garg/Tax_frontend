@@ -1,9 +1,9 @@
 import React from "react";
 import { useTax } from "../context/TaxContext";
-import { Sun, Moon, Database } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 export const Navbar: React.FC = () => {
-  const { theme, toggleTheme, dataset, changeDataset } = useTax();
+  const { theme, toggleTheme } = useTax();
 
   return (
     <nav className="navbar">
@@ -47,28 +47,6 @@ export const Navbar: React.FC = () => {
         </div>
 
         <div className="navbar-actions">
-          {/* Dataset Selector Toggle */}
-          <div className="dataset-selector-wrapper">
-            <span className="dataset-label">
-              <Database size={14} className="icon-db" />
-              Source:
-            </span>
-            <button
-              onClick={() => changeDataset("screenshot")}
-              className={`dataset-btn ${dataset === "screenshot" ? "active" : ""}`}
-              title="Show exact values from the Figma design"
-            >
-              Figma Mock
-            </button>
-            <button
-              onClick={() => changeDataset("prompt")}
-              className={`dataset-btn ${dataset === "prompt" ? "active" : ""}`}
-              title="Show values from prompt Capital Gains JSON"
-            >
-              Prompt API
-            </button>
-          </div>
-
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
